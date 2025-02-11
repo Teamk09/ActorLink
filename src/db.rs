@@ -52,13 +52,19 @@ fn create_movie_actors_table(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+pub fn get_movie_count(conn: &Connection) -> Result<i64> {
+    let mut stmt = conn.prepare("SELECT COUNT(*) FROM movies")?;
+    let mut rows = stmt.query([])?;
+    let count: i64 = rows.next()?.unwrap().get(0)?;
+    Ok(count)
+}
 
-pub fn insert_actor(conn: &Connection, tmdb_actor_id: u32, name: &str, known_for_department: &str) -> Result<()> {
+pub fn insert_actor(conn: &Connection, tmdb_actor_id: u32, name: &str, known_for_department: &str) -> Result<i64> {
     conn.execute(
         "INSERT OR IGNORE INTO actors (tmdb_actor_id, name, known_for_department) VALUES (?, ?, ?)",
         (tmdb_actor_id, name, known_for_department),
     )?;
-    Ok(())
+    Ok(conn.last_insert_rowid())
 }
 
 pub fn insert_movie(conn: &Connection, tmdb_movie_id: u32, title: &str) -> Result<()> {
