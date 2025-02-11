@@ -14,6 +14,8 @@ use crate::db::{get_actor_id_by_name, get_actor_name_by_id, get_movie_titles_by_
 use crate::link_finder::find_actor_link_bidirectional_bfs;
 use std::collections::HashSet;
 use serde::{Serialize, Deserialize}; // Import serde for serialization
+use actix_cors::Cors;
+use actix_web::http::header;
 
 async fn ensure_database_exists() -> Result<(), Box<dyn std::error::Error>> {
     if !Path::new("actor_link.db").exists() {
@@ -136,12 +138,13 @@ async fn get_actor_link(
     }
 }
 
-#[tokio::main]
+
+
+#[tokio::main] // or #[actix_web::main] if you are using that
 async fn main() -> std::io::Result<()> {
     dotenv().ok();
     let _api_key = env::var("TMDB_API_KEY").expect("TMDB_API_KEY not set");
 
-    // Ensure database exists and is populated
     ensure_database_exists().await.expect("Failed to ensure database exists");
 
     let conn = db::establish_connection().expect("Failed to connect to database");
@@ -149,11 +152,17 @@ async fn main() -> std::io::Result<()> {
 
     println!("Starting Actix Web server on port 8080 - with debug prints");
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allowed_methods(vec!["POST", "GET"]) // Correct method name is allowed_methods (plural)
+            .allowed_headers(vec![header::CONTENT_TYPE]);
+
         App::new()
-            .app_data(db_data.clone()) // Share database connection with handler
-            .route("/api/actor-link", web::post().to(get_actor_link)) 
+            .app_data(db_data.clone()) // Share database connection
+            .wrap(cors) // 2. Wrap the App with the Cors middleware
+            .route("/api/actor-link", web::post().to(get_actor_link)) // Your route
     })
-    .bind("127.0.0.1:8080")? // Bind server to address and port
-    .run() // Run the server
+    .bind("127.0.0.1:8080")?
+    .run()
     .await
 }
