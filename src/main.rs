@@ -1,7 +1,6 @@
 use actix_web::{web, App, HttpServer, Responder, HttpResponse}; // Import actix-web items
 use dotenv::dotenv;
 use std::env;
-use std::io::{self, Write};
 use std::path::Path;
 //use tokio::time::{sleep, Duration};
 mod tmdb_get;

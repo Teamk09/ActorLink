@@ -45,7 +45,7 @@ pub async fn populate_database() -> Result<(), Box<dyn std::error::Error>> {
     // Use transaction for batch inserts
     let tx = conn.transaction()?;
 
-    let movie_ids: Vec<u32> = (232000..262000).collect();
+    let movie_ids: Vec<u32> = (262000..302000).collect();
 
     let mut stream = stream::iter(movie_ids)
         .map(|movie_tmdb_id| {
