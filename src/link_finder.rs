@@ -42,40 +42,46 @@ pub fn find_actor_link_bidirectional_bfs(conn: &Connection, start_actor_id: i64,
     backward_visited.insert(target_actor_id);
 
     while !forward_queue.is_empty() && !backward_queue.is_empty() {
-        // --- Forward BFS ---
-        if let Some(current_actor_id) = forward_queue.pop_front() { // Use if let to handle Option correctly
-            let movie_ids = get_movie_ids_for_actor(conn, current_actor_id)?;
-            for movie_id in movie_ids {
-                let actor_ids = get_actor_ids_for_movie(conn, movie_id)?;
-                for neighbor_actor_id in actor_ids {
-                    if !forward_visited.contains(&neighbor_actor_id) {
-                        forward_visited.insert(neighbor_actor_id);
-                        forward_path.insert(neighbor_actor_id, current_actor_id);
-                        forward_queue.push_back(neighbor_actor_id);
+        // --- Forward BFS Level ---
+        let forward_level_size = forward_queue.len(); // Process current level
+        for _ in 0..forward_level_size {
+            if let Some(current_actor_id) = forward_queue.pop_front() {
+                let movie_ids = get_movie_ids_for_actor(conn, current_actor_id)?;
+                for movie_id in movie_ids {
+                    let actor_ids = get_actor_ids_for_movie(conn, movie_id)?;
+                    for neighbor_actor_id in actor_ids {
+                        if !forward_visited.contains(&neighbor_actor_id) {
+                            forward_visited.insert(neighbor_actor_id);
+                            forward_path.insert(neighbor_actor_id, current_actor_id);
+                            forward_queue.push_back(neighbor_actor_id);
 
-                        if backward_visited.contains(&neighbor_actor_id) {
-                            // Intersection found! Construct path
-                            return construct_path(neighbor_actor_id, &forward_path, &backward_path, start_actor_id, target_actor_id);
+                            if backward_visited.contains(&neighbor_actor_id) {
+                                // Intersection found! Construct path
+                                return construct_path(neighbor_actor_id, &forward_path, &backward_path, start_actor_id, target_actor_id);
+                            }
                         }
                     }
                 }
             }
         }
 
-        // --- Backward BFS ---
-        if let Some(current_actor_id) = backward_queue.pop_front() { // Use if let to handle Option correctly
-            let movie_ids = get_movie_ids_for_actor(conn, current_actor_id)?;
-            for movie_id in movie_ids {
-                let actor_ids = get_actor_ids_for_movie(conn, movie_id)?;
-                for neighbor_actor_id in actor_ids {
-                    if !backward_visited.contains(&neighbor_actor_id) {
-                        backward_visited.insert(neighbor_actor_id);
-                        backward_path.insert(neighbor_actor_id, current_actor_id);
-                        backward_queue.push_back(neighbor_actor_id);
+        // --- Backward BFS Level ---
+        let backward_level_size = backward_queue.len(); // Process current level
+        for _ in 0..backward_level_size {
+            if let Some(current_actor_id) = backward_queue.pop_front() {
+                let movie_ids = get_movie_ids_for_actor(conn, current_actor_id)?;
+                for movie_id in movie_ids {
+                    let actor_ids = get_actor_ids_for_movie(conn, movie_id)?;
+                    for neighbor_actor_id in actor_ids {
+                        if !backward_visited.contains(&neighbor_actor_id) {
+                            backward_visited.insert(neighbor_actor_id);
+                            backward_path.insert(neighbor_actor_id, current_actor_id);
+                            backward_queue.push_back(neighbor_actor_id);
 
-                        if forward_visited.contains(&neighbor_actor_id) {
-                            // Intersection found! Construct path
-                            return construct_path(neighbor_actor_id, &forward_path, &backward_path, start_actor_id, target_actor_id);
+                            if forward_visited.contains(&neighbor_actor_id) {
+                                // Intersection found! Construct path
+                                return construct_path(neighbor_actor_id, &forward_path, &backward_path, start_actor_id, target_actor_id);
+                            }
                         }
                     }
                 }
